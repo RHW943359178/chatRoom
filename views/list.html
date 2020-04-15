@@ -18,29 +18,49 @@
   {{username}}您好，请说话：<input type="text" name="newContent" id="newContent">
   <button id="btn">发送</button>
 
-  <script type="text/javascript">
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    var socket = io('http://localhost:8888');
+    socket.on('connect', () => {
+      console.log('连接上了')
+    });
+    //  代表服务器那边emit('msg1', data)
+    socket.on('msg1', data => {
+      console.log(data);
+    });
+    socket.on('disconnect', () => {
+      console.log('断开连接了');
+    });
+
     document.getElementById('btn').onclick = () => {
       var newContent = document.getElementById('newContent').value;
-      var xhr = new XMLHttpRequest();
-      xhr.open('post', '/add');
-      xhr.setRequestHeader('content-type', 'application/x-www-form-urlencoded');
-      //  最普通的键值对方式
-      xhr.send('msg=' + newContent);
-      xhr.onreadystatechange = () => {
-        if (xhr.readyState === 4 && xhr.status === 200) {
-          console.log(xhr.responseText);
-          //  转化为 JSON 数组
-          var arr = JSON.parse(xhr.responseText);
-          //  循环拼接html
-          var html = '<ul>';
-          for (let i = arr.length - 1; i >= 0; i--) {
-            html += '<li>' + arr[i].username + ':' + arr[i].content + '</li>';
-          }
-          html += '</ul>'
-          document.getElementById('box').innerHTML = html;
-        }
-      }
+      socket.emit('sendMsg');
     }
+  </script>
+
+  <script type="text/javascript">
+    // document.getElementById('btn').onclick = () => {
+    //   var newContent = document.getElementById('newContent').value;
+    //   var xhr = new XMLHttpRequest();
+    //   xhr.open('post', '/add');
+    //   xhr.setRequestHeader('content-type', 'application/x-www-form-urlencoded');
+    //   //  最普通的键值对方式
+    //   xhr.send('msg=' + newContent);
+    //   xhr.onreadystatechange = () => {
+    //     if (xhr.readyState === 4 && xhr.status === 200) {
+    //       console.log(xhr.responseText);
+    //       //  转化为 JSON 数组
+    //       var arr = JSON.parse(xhr.responseText);
+    //       //  循环拼接html
+    //       var html = '<ul>';
+    //       for (let i = arr.length - 1; i >= 0; i--) {
+    //         html += '<li>' + arr[i].username + ':' + arr[i].content + '</li>';
+    //       }
+    //       html += '</ul>'
+    //       document.getElementById('box').innerHTML = html;
+    //     }
+    //   }
+    // }
   </script>
 </body>
 </html>

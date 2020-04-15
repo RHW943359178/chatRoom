@@ -5,6 +5,7 @@ const render = require('koa-art-template');
 const session = require('koa-session');
 const path = require('path');
 const bodyParser = require('koa-bodyparser');
+const IO = require('koa-socket');
 
 let app = new Koa();
 let router = new Router();
@@ -14,6 +15,25 @@ let msgs = [
   {username: '小李', content: '呵呵'},
   {username: '小洪', content: '嘿嘿'},
 ]
+
+//  加入socket.io开始
+let io = new IO();
+
+io.attach(app); //  附加到app产生关联
+io.on('connection', ctx => {
+  console.log('连接上了一个');
+  //  发消息给msg1
+  io.broadcast('msg1', '我是服务器来的');
+});
+
+//  接收用户的消息
+io.on('sendMsg', (ctx, data) => {
+  //  context.socket (客户端的哪个连接)
+  //  context.socket.socketId //  私聊用的
+  console.log('消息来了', data);
+})
+//  加入socket.io结束
+
 
 //  配置render
 render(app, {
