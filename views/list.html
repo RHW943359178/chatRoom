@@ -1,0 +1,46 @@
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>聊天列表</title>
+</head>
+<body>
+  <div id="box">
+    {{each msgs}}
+      <ul>   
+          <li>
+            {{$value.username}}
+            {{$value.content}}
+          </li>
+      </ul>
+    {{/each}}
+  </div>
+  {{username}}您好，请说话：<input type="text" name="newContent" id="newContent">
+  <button id="btn">发送</button>
+
+  <script type="text/javascript">
+    document.getElementById('btn').onclick = () => {
+      var newContent = document.getElementById('newContent').value;
+      var xhr = new XMLHttpRequest();
+      xhr.open('post', '/add');
+      xhr.setRequestHeader('content-type', 'application/x-www-form-urlencoded');
+      //  最普通的键值对方式
+      xhr.send('msg=' + newContent);
+      xhr.onreadystatechange = () => {
+        if (xhr.readyState === 4 && xhr.status === 200) {
+          console.log(xhr.responseText);
+          //  转化为 JSON 数组
+          var arr = JSON.parse(xhr.responseText);
+          //  循环拼接html
+          var html = '<ul>';
+          for (let i = arr.length - 1; i >= 0; i--) {
+            html += '<li>' + arr[i].username + ':' + arr[i].content + '</li>';
+          }
+          html += '</ul>'
+          document.getElementById('box').innerHTML = html;
+        }
+      }
+    }
+  </script>
+</body>
+</html>
