@@ -5,15 +5,15 @@
   <title>聊天列表</title>
 </head>
 <body>
+  当前在线人数：<span id="online"></span>
+  <hr />
+  当前在线用户：<select name="" id="toWho" onchange="privateTo = this.value"></select>
+  <hr />
+  <div>{{privateTo}}</div>
+  <!-- 消息列表 -->
   <div id="box">
-    {{each msgs}}
-      <ul>   
-          <li>
-            {{$value.username}}
-            {{$value.content}}
-          </li>
-      </ul>
-    {{/each}}
+    <ul>
+    </ul>
   </div>
   {{username}}您好，请说话：<input type="text" name="newContent" id="newContent">
   <button id="btn">发送</button>
@@ -21,8 +21,15 @@
   <script src="/socket.io/socket.io.js"></script>
   <script>
     var socket = io('http://localhost:8888');
+
+    var privateTo = 1;
+
     socket.on('connect', () => {
-      console.log('连接上了')
+      console.log('连接上了');
+      //  登录，同步前后端信息
+      socket.emit('login', {
+        id: {{id}}
+      })
     });
     //  代表服务器那边emit('msg1', data)
     socket.on('msg1', data => {
@@ -32,35 +39,66 @@
       console.log('断开连接了');
     });
 
+    //  获取实时的在线信息列表
+    socket.on('online', data => {
+      //  data是一个sessionStore
+
+      //  把该对象换成数组
+      var users = Object.values(data.online);
+      //  展示在线人数
+      document.getElementById('online').innerHTML = users.length;
+
+      //  做一个select来展示在线列表
+      var select = document.getElementById('toWho');
+      //  临时字符串 innerHTML
+      var html;
+      for (var i = users.length - 1; i >= 0; i--) {
+        var u = users[i];
+        html += `
+          <option value="${u.socketId}">
+            ${u.username}  
+          </option>
+        `
+      }
+      //  插入数据
+      select.innerHTML = html;
+
+    })
+
     document.getElementById('btn').onclick = () => {
       var newContent = document.getElementById('newContent').value;
-      socket.emit('sendMsg');
+      socket.emit('sendMsg', {
+        newContent: newContent
+      });
     }
+    socket.on('allMessage', data => {
+
+    });
   </script>
 
-  <script type="text/javascript">
-    // document.getElementById('btn').onclick = () => {
-    //   var newContent = document.getElementById('newContent').value;
-    //   var xhr = new XMLHttpRequest();
-    //   xhr.open('post', '/add');
-    //   xhr.setRequestHeader('content-type', 'application/x-www-form-urlencoded');
-    //   //  最普通的键值对方式
-    //   xhr.send('msg=' + newContent);
-    //   xhr.onreadystatechange = () => {
-    //     if (xhr.readyState === 4 && xhr.status === 200) {
-    //       console.log(xhr.responseText);
-    //       //  转化为 JSON 数组
-    //       var arr = JSON.parse(xhr.responseText);
-    //       //  循环拼接html
-    //       var html = '<ul>';
-    //       for (let i = arr.length - 1; i >= 0; i--) {
-    //         html += '<li>' + arr[i].username + ':' + arr[i].content + '</li>';
-    //       }
-    //       html += '</ul>'
-    //       document.getElementById('box').innerHTML = html;
-    //     }
-    //   }
-    // }
-  </script>
+  <!-- <script type="text/javascript">
+    document.getElementById('btn').onclick = () => {
+      var newContent = document.getElementById('newContent').value;
+      var xhr = new XMLHttpRequest();
+      xhr.open('post', '/add');
+      xhr.setRequestHeader('content-type', 'application/x-www-form-urlencoded');
+      //  最普通的键值对方式
+      xhr.send('msg=' + newContent);
+      xhr.onreadystatechange = () => {
+        if (xhr.readyState === 4 && xhr.status === 200) {
+          console.log(xhr.responseText);
+          //  转化为 JSON 数组
+          var arr = JSON.parse(xhr.responseText);
+          //  循环拼接html
+          var html = '<ul>';
+          for (let i = arr.length - 1; i >= 0; i--) {
+            html += '<li>' + arr[i].username + ':' + arr[i].content + '</li>';
+          }
+          html += '</ul>'
+          document.getElementById('box').innerHTML = html;
+        }
+      }
+    }
+  </script> -->
 </body>
 </html>
